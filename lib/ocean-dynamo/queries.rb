@@ -257,6 +257,39 @@ module OceanDynamo
       result
     end
 
+    def find_primary_each(hash_key, hash_value,
+                        range_key=nil, comparator=nil, range_value=nil,
+                        limit: nil, scan_index_forward: true, consistent: false,
+                        &block)
+      raise "The hash_key is #{hash_key.inspect} but must be #{table_hash_key.inspect}" unless hash_key == table_hash_key
+      hash_value = hash_value.to_i if hash_value.is_a?(Time)
+      range_value = range_value.to_i if range_value.is_a?(Time)
+      options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
+                                  select: :all_attributes,
+                                  limit: limit, scan_index_forward: scan_index_forward,
+                                  consistent: consistent)
+      in_batches :query, options do |attrs|
+        if limit
+          return if limit <= 0
+          limit = limit - 1
+        end
+        yield new._setup_from_dynamo(attrs)
+      end
+    end
+
+
+    #
+    # This method takes the same args as +find_local_each+ but returns all found items as
+    # an array.
+    #
+    def find_primary(*args)
+      result = []
+      find_primary_each(*args) do |item|
+        result << item
+      end
+      result
+    end
+
 
   end
 end
