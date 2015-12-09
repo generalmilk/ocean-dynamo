@@ -265,7 +265,7 @@ module OceanDynamo
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
-                                  select: count? :count : :all_attributes ,
+                                  select: count ? :count : :all_attributes,
                                   limit: limit, scan_index_forward: scan_index_forward,
                                   consistent: consistent)
       
