@@ -1,5 +1,6 @@
 module OceanDynamo
   module Queries
+    rate_per_sec = 100
 
     # ---------------------------------------------------------
     #
@@ -65,9 +66,15 @@ module OceanDynamo
     #
     def in_batches(message, options, &block)
       _late_connect?
+      last_query_time = -1
       loop do
+        time_to_sleep = 1-(Time.now.to_f-last_query_time)
+        if time_to_sleep > 0
+            p time_to_sleep
+            sleep(time_to_sleep)
+        end
+        last_query_time = Time.now.to_f
         result = dynamo_table.send message, options
-        byebug
         if options[:select]=="COUNT"
             yield result.count
         else
@@ -176,7 +183,7 @@ module OceanDynamo
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
-                                  limit: limit, scan_index_forward: scan_index_forward)
+                                  limit: limit ? [limit,rate_per_sec].min : nil, scan_index_forward: scan_index_forward)
       index_name = (range_key ? "#{hash_key}_#{range_key}" : hash_key.to_s) + "_global"
       options[:index_name] = index_name
       raise "Undefined global index: #{index_name}" unless global_secondary_indexes[index_name]
@@ -235,7 +242,7 @@ module OceanDynamo
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
                                   select: count ? :count : :all_attributes,
-                                  limit: limit, scan_index_forward: scan_index_forward,
+                                  limit: limit ? [limit,rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
                                   consistent: consistent)
       index_name = range_key.to_s
       options[:index_name] = index_name
@@ -282,7 +289,7 @@ module OceanDynamo
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
                                   select: count ? :count : :all_attributes,
-                                  limit: limit, scan_index_forward: scan_index_forward,
+                                  limit: limit ? [limit,rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
                                   consistent: consistent)
       
       in_batches :query, options do |attrs|
