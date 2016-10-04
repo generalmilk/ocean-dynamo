@@ -305,7 +305,7 @@ module OceanDynamo
     def find_primary(*args)
       if args[5][:count]
         result = 0
-        find_local_each(*args) do |item|
+        find_primary_each(*args) do |item|
           result += item
         end
       else
