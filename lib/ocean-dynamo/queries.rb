@@ -67,6 +67,7 @@ module OceanDynamo
       _late_connect?
       loop do
         result = dynamo_table.send message, options
+        byebug
         if options[:select]=="COUNT"
             yield result.count
         else
@@ -181,14 +182,14 @@ module OceanDynamo
       raise "Undefined global index: #{index_name}" unless global_secondary_indexes[index_name]
       all_projected = global_secondary_indexes[index_name]["projection_type"] == "ALL"
       in_batches :query, options do |attrs|
-        if limit
-          return if limit <= 0
-          limit = limit - 1
-        end
         if all_projected
           yield new._setup_from_dynamo(attrs)
         else
           yield find(attrs[table_hash_key.to_s], table_range_key && attrs[table_range_key.to_s])
+        end
+        if limit
+          limit = limit - 1
+          return if limit <= 0
         end
       end
     end
@@ -243,11 +244,11 @@ module OceanDynamo
         if count
           yield attrs
         else
-          if limit
-            return if limit <= 0
-            limit = limit - 1
-          end
           yield new._setup_from_dynamo(attrs)
+          if limit
+            limit = limit - 1
+            return if limit <= 0
+          end
         end
       end
     end
@@ -288,11 +289,11 @@ module OceanDynamo
         if count
           yield attrs
         else
-          if limit
-            return if limit <= 0
-            limit = limit - 1
-          end
           yield new._setup_from_dynamo(attrs)
+          if limit
+            limit = limit - 1
+            return if limit <= 0
+          end
         end
       end
     end
