@@ -1,7 +1,8 @@
 module OceanDynamo
   module Queries
     @rate_per_sec = 100
-
+    @@rate_per_sec = 100
+    rate_per_sec = 100
     # ---------------------------------------------------------
     #
     #  Class methods
@@ -240,6 +241,7 @@ module OceanDynamo
       raise "The hash_key is #{hash_key.inspect} but must be #{table_hash_key.inspect}" unless hash_key == table_hash_key
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
       range_value = range_value.to_i if range_value.is_a?(Time)
+      byebug
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
                                   select: count ? :count : :all_attributes,
                                   limit: limit ? [limit,@rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
