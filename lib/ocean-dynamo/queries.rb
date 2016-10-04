@@ -67,6 +67,7 @@ module OceanDynamo
       _late_connect?
       loop do
         result = dynamo_table.send message, options
+        byebug
         result.items.each do |hash|
           yield hash
         end
