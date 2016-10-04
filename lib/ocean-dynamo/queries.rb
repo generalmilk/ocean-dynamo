@@ -223,13 +223,13 @@ module OceanDynamo
     #
     def find_local_each(hash_key, hash_value,
                         range_key, comparator, range_value,
-                        limit: nil, scan_index_forward: true, consistent: false,
+                        limit: nil, scan_index_forward: true, consistent: false, count: false,
                         &block)
       raise "The hash_key is #{hash_key.inspect} but must be #{table_hash_key.inspect}" unless hash_key == table_hash_key
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
-                                  select: :all_attributes,
+                                  select: count ? :count : :all_attributes,
                                   limit: limit, scan_index_forward: scan_index_forward,
                                   consistent: consistent)
       index_name = range_key.to_s
