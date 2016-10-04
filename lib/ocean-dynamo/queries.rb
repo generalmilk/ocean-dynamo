@@ -67,9 +67,12 @@ module OceanDynamo
       _late_connect?
       loop do
         result = dynamo_table.send message, options
-        byebug
-        result.items.each do |hash|
-          yield hash
+        if options[:select]=="COUNT"
+            yield result.count
+        else
+            result.items.each do |hash|
+              yield hash
+            end
         end
         return true unless result.last_evaluated_key
         options[:exclusive_start_key] = result.last_evaluated_key
@@ -237,11 +240,15 @@ module OceanDynamo
       options[:index_name] = index_name
       raise "Undefined local index: #{index_name}" unless local_secondary_indexes.include?(index_name)
       in_batches :query, options do |attrs|
-        if limit
-          return if limit <= 0
-          limit = limit - 1
+        if count
+          yield attrs
+        else
+          if limit
+            return if limit <= 0
+            limit = limit - 1
+          end
+          yield new._setup_from_dynamo(attrs)
         end
-        yield new._setup_from_dynamo(attrs)
       end
     end
 
@@ -251,9 +258,16 @@ module OceanDynamo
     # an array.
     #
     def find_local(*args)
+      if args[5][:count]
+        result = 0
+        find_local_each(*args) do |item|
+          result += item
+        end
+      else
       result = []
-      find_local_each(*args) do |item|
-        result << item
+        find_local_each(*args) do |item|
+          result << item
+        end
       end
       result
     end
@@ -271,11 +285,15 @@ module OceanDynamo
                                   consistent: consistent)
       
       in_batches :query, options do |attrs|
-        if limit
-          return if limit <= 0
-          limit = limit - 1
+        if count
+          yield attrs
+        else
+          if limit
+            return if limit <= 0
+            limit = limit - 1
+          end
+          yield new._setup_from_dynamo(attrs)
         end
-        yield new._setup_from_dynamo(attrs)
       end
     end
 
@@ -285,9 +303,16 @@ module OceanDynamo
     # an array.
     #
     def find_primary(*args)
-      result = []
-      find_primary_each(*args) do |item|
-        result << item
+      if args[5][:count]
+        result = 0
+        find_local_each(*args) do |item|
+          result += item
+        end
+      else
+        result = []
+        find_primary_each(*args) do |item|
+          result << item
+        end
       end
       result
     end
