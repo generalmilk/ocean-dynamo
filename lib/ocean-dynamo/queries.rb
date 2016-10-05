@@ -1,8 +1,6 @@
 module OceanDynamo
   module Queries
-    @rate_per_sec = 100
     @@rate_per_sec = 100
-    rate_per_sec = 100
     # ---------------------------------------------------------
     #
     #  Class methods
@@ -71,7 +69,6 @@ module OceanDynamo
       loop do
         time_to_sleep = 1-(Time.now.to_f-last_query_time)
         if time_to_sleep > 0
-            p time_to_sleep
             sleep(time_to_sleep)
         end
         last_query_time = Time.now.to_f
@@ -184,7 +181,7 @@ module OceanDynamo
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
-                                  limit: limit ? [limit,@rate_per_sec].min : nil, scan_index_forward: scan_index_forward)
+                                  limit: limit ? [limit,@@rate_per_sec].min : nil, scan_index_forward: scan_index_forward)
       index_name = (range_key ? "#{hash_key}_#{range_key}" : hash_key.to_s) + "_global"
       options[:index_name] = index_name
       raise "Undefined global index: #{index_name}" unless global_secondary_indexes[index_name]
@@ -241,10 +238,9 @@ module OceanDynamo
       raise "The hash_key is #{hash_key.inspect} but must be #{table_hash_key.inspect}" unless hash_key == table_hash_key
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
       range_value = range_value.to_i if range_value.is_a?(Time)
-      byebug
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
                                   select: count ? :count : :all_attributes,
-                                  limit: limit ? [limit,@rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
+                                  limit: limit ? [limit,@@rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
                                   consistent: consistent)
       index_name = range_key.to_s
       options[:index_name] = index_name
@@ -291,7 +287,7 @@ module OceanDynamo
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
                                   select: count ? :count : :all_attributes,
-                                  limit: limit ? [limit,@rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
+                                  limit: limit ? [limit,@@rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
                                   consistent: consistent)
       
       in_batches :query, options do |attrs|
