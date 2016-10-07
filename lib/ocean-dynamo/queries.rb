@@ -233,7 +233,7 @@ module OceanDynamo
     #
     def find_local_each(hash_key, hash_value,
                         range_key, comparator, range_value,
-                        limit: nil, scan_index_forward: true, consistent: false, count: false,
+                        limit: nil, scan_index_forward: true, consistent: false, count: false, last_evaluated_key: nil,
                         &block)
       raise "The hash_key is #{hash_key.inspect} but must be #{table_hash_key.inspect}" unless hash_key == table_hash_key
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
@@ -245,6 +245,7 @@ module OceanDynamo
       index_name = range_key.to_s
       options[:index_name] = index_name
       raise "Undefined local index: #{index_name}" unless local_secondary_indexes.include?(index_name)
+      options[:exclusive_start_key]=last_evaluated_key
       in_batches :query, options do |attrs|
         if count
           yield attrs
