@@ -265,7 +265,7 @@ module OceanDynamo
     # an array.
     #
     def find_local(*args)
-      if args[5][:count]
+      if args[5] and args[5][:count]
         result = 0
         find_local_each(*args) do |item|
           result += item
@@ -310,7 +310,7 @@ module OceanDynamo
     # an array.
     #
     def find_primary(*args)
-      if args[5][:count]
+      if args[5] and args[5][:count]
         result = 0
         find_primary_each(*args) do |item|
           result += item
