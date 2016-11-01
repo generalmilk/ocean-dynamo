@@ -69,7 +69,6 @@ module OceanDynamo
       loop do
         time_to_sleep = 1-(Time.now.to_f-last_query_time)
         if time_to_sleep > 0
-            p "test sleep"
             sleep(time_to_sleep)
         end
         last_query_time = Time.now.to_f
