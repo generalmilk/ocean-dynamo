@@ -69,6 +69,7 @@ module OceanDynamo
       loop do
         time_to_sleep = 1-(Time.now.to_f-last_query_time)
         if time_to_sleep > 0
+            p "test sleep"
             sleep(time_to_sleep)
         end
         last_query_time = Time.now.to_f
@@ -233,14 +234,14 @@ module OceanDynamo
     #
     def find_local_each(hash_key, hash_value,
                         range_key, comparator, range_value,
-                        limit: nil, scan_index_forward: true, consistent: false, count: false, last_evaluated_key: nil,
+                        limit: nil, scan_index_forward: true, consistent: false, count: false, last_evaluated_key: nil, throughput: @@rate_per_sec,
                         &block)
       raise "The hash_key is #{hash_key.inspect} but must be #{table_hash_key.inspect}" unless hash_key == table_hash_key
       hash_value = hash_value.to_i if hash_value.is_a?(Time)
       range_value = range_value.to_i if range_value.is_a?(Time)
       options = condition_builder(hash_key, hash_value, range_key, comparator, range_value,
                                   select: count ? :count : :all_attributes,
-                                  limit: limit ? [limit,@@rate_per_sec].min : nil, scan_index_forward: scan_index_forward,
+                                  limit: limit ? [limit,throughput].min : throughput, scan_index_forward: scan_index_forward,
                                   consistent: consistent)
       index_name = range_key.to_s
       options[:index_name] = index_name
